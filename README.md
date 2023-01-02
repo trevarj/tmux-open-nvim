@@ -4,7 +4,7 @@ A tmux plugin that helps opening files in a Neovim pane
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/549092.png)](https://asciinema.org/a/549092)
+[![asciicast](https://asciinema.org/a/549092.png)](https://asciinema.org/a/549092?speed=1.5)
 
 ## Installation
 
