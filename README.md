@@ -36,7 +36,7 @@ $ ton file.txt # optionally add :[line]:[col] to the end, i.e file.txt:40:5
 #### Caveat
 
 Upon launch of a fresh tmux session, the script will not be in the first pane
-due to how an environment is load, I guess. I think the only way to resolve this
+due to how an environment is loaded, I guess. I think the only way to resolve this
 is by adding the `~/.tmux/plugins/tmux-open-nvim/scripts` directory to your path
 permanently or with `tmux -e PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
 
@@ -58,4 +58,4 @@ Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
 ## Future Features
 
 - [ ] A fzf-like selector that can target exactly which neovim instance you want to open a file in
-
+- [ ] Fix "caveat" above (maybe?)
