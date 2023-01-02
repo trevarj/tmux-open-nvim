@@ -17,7 +17,7 @@ set -g @plugin 'trevarj/tmux-open-nvim'
 ```
 
 Reload tmux config (`<prefix>-I`). Also you may want to start a fresh session to
-reload `$PATH` into your panes.
+reload `$PATH` into your environment.
 
 ## Usage
 
@@ -33,6 +33,12 @@ has a pane running `nvim` and a pane with a terminal:
 $ ton file.txt # optionally add :[line]:[col] to the end, i.e file.txt:40:5
 # Opens file.txt in nvim pane
 ```
+#### Caveat
+
+Upon launch of a fresh tmux session, the script will not be in the first pane
+due to how an environment is load, I guess. I think the only way to resolve this
+is by adding the `~/.tmux/plugins/tmux-open-nvim/scripts` directory to your path
+permanently or with `tmux -e PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
 
 ### tmux-fingers (or tmux-open)
 
@@ -49,9 +55,7 @@ set -g @fingers-ctrl-action "xargs -I {} tmux run-shell 'cd #{pane_current_path}
 
 Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
 
-## Caveat
+## Future Features
 
-Upon launch of a fresh tmux session, the script will not be in the first pane
-due to how an environment is load, I guess. I think the only way to resolve this
-is by adding the `~/.tmux/plugins/tmux-open-nvim/scripts` directory to your path
-permanently or with `tmux -e PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
+- [ ] A fzf-like selector that can target exactly which neovim instance you want to open a file in
+
