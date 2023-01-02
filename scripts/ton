@@ -26,8 +26,7 @@ NVIM_INSTANCES=$(tmux list-panes -F '#{pane_pid}' | xargs -I {} pgrep -P {} vim)
 
 # Get all nvim listening sockets (default location)
 # shellcheck disable=2086
-LISTEN_SOCKS=$(ls ${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}/**/nvim.*.0)
-
+LISTEN_SOCKS=$(ls ${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}/**/nvim.*.0 2>/dev/null)
 # Match child process with nvim sock, since process is within 
 # e.g `/run/user/1000/nvim.1624238.0` -- nvim process is 1624238
 for nvim_pid in $NVIM_INSTANCES
