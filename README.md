@@ -1,6 +1,6 @@
 # tmux-open-nvim
 
-A tmux plugin that helps opening files in a Neovim instance
+A tmux plugin that helps opening files in a Neovim pane
 
 ## Demo
 
