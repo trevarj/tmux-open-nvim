@@ -51,5 +51,5 @@ Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
 
 Upon launch of a fresh tmux session, the script will not be in the first pane
 due to how an environment is load, I guess. I think the only way to resolve this
-is by adding the ~/.tmux/plugins/tmux-open-nvim/scripts` directory to your path
-permanently or with `tmux -r PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
+is by adding the `~/.tmux/plugins/tmux-open-nvim/scripts` directory to your path
+permanently or with `tmux -e PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
