@@ -2,6 +2,10 @@
 
 A tmux plugin that helps opening files in a Neovim instance
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/549092.png)](https://asciinema.org/a/549092)
+
 ## Installation
 
 Using TPM, add this to your `.tmux.conf`
