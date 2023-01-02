@@ -37,8 +37,8 @@ do
     if [[ $sock == *$nvim_pid* ]]
     then
       # Open on remote!
-      nvim --server "$sock" --remote-send ":e $FILE<cr>"
-      nvim --server "$sock" --remote-send ":call cursor($LINE, $COLUMN)<cr>"
+      nvim --server "$sock" --remote-send "<esc>:e $FILE<cr>"
+      nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
       exit 0
     fi
   done
