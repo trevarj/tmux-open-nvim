@@ -1,20 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
+shopt -s globstar
 
-shopt -s nullglob extglob extquote globstar
+# Check pipe from stdin or parameter
+FPATH=${STDIN:-$1}
+if [ "$1" ]; then
+  FPATH=$1
+elif read -r -t 2 STDIN; then
+  FPATH=$STDIN
+else
+ echo "No file provided for opening" && exit 1; 
+fi
+FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
 
-# Parse line:col from $1
-[ "$1" ] || { echo "No file provided for opening" && exit 1; }
-FPATH=$(echo "$1" | tr -d '[:space:]')
+# Parse line:col 
 readarray -td: a < <(printf %s "$FPATH")
-[ "${a[0]}" ] || { echo "You must supply a filename" && exit 1; }
+[ "${a[0]}" ] || { echo "You must supply a filename. Found ${a[0]}" && exit 1; }
 FILE=$(realpath "${a[0]}")
-[ "$FILE" ] || { echo "Couldn't open file $FILE" && exit 1; }
+[ "$FILE" ] || { echo "Couldn't open file ${a[0]}" && exit 1; }
 LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
 # Get all panes in current window
 # Get their child instances, since the parent will most likely be the shell
-NVIM_INSTANCES=$(tmux list-panes -F '#{pane_pid}' | xargs -I % -r pgrep -P % vim)
+NVIM_INSTANCES=$(tmux list-panes -F '#{pane_pid}' | xargs -I {} pgrep -P {} vim)
 
 # Get all nvim listening sockets (default location)
 # shellcheck disable=2086
@@ -35,5 +43,7 @@ do
     fi
   done
 done
+
 # No remote nvim, so just open in current pane
-nvim -c "call cursor($LINE, $COLUMN)" "$FILE"
+tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
+tmux send-keys "C-m"
