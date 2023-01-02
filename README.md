@@ -38,7 +38,7 @@ Add this to your `.tmux.conf`:
 # Overrides matching file paths with :[line]:[col] at the end
 set -g @fingers-pattern-0 "((^|^\.|[[:space:]]|[[:space:]]\.|[[:space:]]\.\.|^\.\.)[[:alnum:]~_-]*/[][[:alnum:]_.#$%&+=/@-]+)(:[[:digit:]]*:[[:digit:]]*)?"
 # Launches helper script on Ctrl+[key] in fingers mode
-set -g @fingers-ctrl-action "xargs -I {} tmux run-shell 'cd #{pane_current_path}; ton \"{}\" > ~/.tmux/plugins/tmux-open-nvim/onvim.log'"s
+set -g @fingers-ctrl-action "xargs -I {} tmux run-shell 'cd #{pane_current_path}; ton {} > ~/.tmux/plugins/tmux-open-nvim/onvim.log'"s
 ```
 
 Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
