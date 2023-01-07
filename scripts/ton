@@ -4,15 +4,15 @@ shopt -s globstar
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
 if [ "$1" ]; then
-  FPATH=$1
+	FPATH=$1
 elif read -r -t 2 STDIN; then
-  FPATH=$STDIN
+	FPATH=$STDIN
 else
- echo "No file provided for opening" && exit 1; 
+	echo "No file provided for opening" && exit 1
 fi
 FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
 
-# Parse line:col 
+# Parse line:col
 readarray -td: a < <(printf %s "$FPATH")
 [ "${a[0]}" ] || { echo "You must supply a filename. Found ${a[0]}" && exit 1; }
 FILE=$(realpath "${a[0]}")
@@ -20,27 +20,24 @@ FILE=$(realpath "${a[0]}")
 LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
-# Get all panes in current window
-# Get their child instances, since the parent will most likely be the shell
-NVIM_INSTANCES=$(tmux list-panes -F '#{pane_pid}' | xargs -I {} pgrep -P {} vim)
-
 # Get all nvim listening sockets (default location)
 # shellcheck disable=2086
 LISTEN_SOCKS=$(ls ${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}/**/nvim.*.0 2>/dev/null)
-# Match child process with nvim sock, since process is within 
+# Match child process with nvim sock, since process is within
 # e.g `/run/user/1000/nvim.1624238.0` -- nvim process is 1624238
-for nvim_pid in $NVIM_INSTANCES
-do
-  for sock in $LISTEN_SOCKS
-  do
-    if [[ $sock == *$nvim_pid* ]]
-    then
-      # Open on remote!
-      nvim --server "$sock" --remote-send "<esc>:e $FILE<cr>"
-      nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
-      exit 0
-    fi
-  done
+for pane in $(tmux list-panes -F '#{pane_index} #{pane_pid}'); do
+	pane=("$pane")
+	id=${pane[0]}
+	pid=${pane[1]}
+	for sock in $LISTEN_SOCKS; do
+		if [[ $sock == *$(pgrep -P "$pid" vim)* ]]; then
+			# Open on remote!
+			nvim --server "$sock" --remote-send "<esc>:e $FILE<cr>"
+			nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
+			tmux selectp -t "$id"
+			exit 0
+		fi
+	done
 done
 
 # No remote nvim, so just open in current pane
