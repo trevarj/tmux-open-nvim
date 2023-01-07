@@ -46,10 +46,10 @@ permanently or with `tmux -e PATH=$PATH:~/.tmux/plugins/tmux-open-nvim/scripts`
 > But when you create a new window, like with split-window, the new window gets the environment from the setenv.
 > The example shows that both windows have the environment whether set explicitly via export or via setenv.
 
-Ref:
-  [0](https://stackoverflow.com/a/49395839/506517)
-  [1](https://stackoverflow.com/a/49395839/506517)
-  [No env var restore with tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect/issues/312)
+See:
+  - [Info](https://stackoverflow.com/a/49395839/506517)
+  - [More Info](https://stackoverflow.com/a/49395839/506517)
+  - [No env var restoration with tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect/issues/312)
 
 ### tmux-fingers (or tmux-open)
 
