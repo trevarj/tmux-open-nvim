@@ -32,7 +32,7 @@ for pane in $(tmux list-panes -F '#{pane_index} #{pane_pid}'); do
 	for sock in $LISTEN_SOCKS; do
 		if [[ $sock == *$(pgrep -P "$pid" vim)* ]]; then
 			# Open on remote!
-			nvim --server "$sock" --remote-send "<esc>:e $FILE<cr>"
+			nvim --server "$sock" --remote-send "<esc>:tabnew $FILE<cr>"
 			nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
 			tmux selectp -t "$id"
 			exit 0
