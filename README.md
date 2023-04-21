@@ -19,6 +19,15 @@ set -g @plugin 'trevarj/tmux-open-nvim'
 Reload tmux config (`<prefix>-I`). Also you may want to start a fresh session to
 reload `$PATH` into your environment.
 
+### Create symlink to `ton` script (optional)
+Due to the caveat below, you can create a symlink to the `ton` script so it can
+be used no matter what.
+
+```shell
+# Use any path that is on your $PATH
+$ sudo ln -s ~/.tmux/plugins/tmux-open-nvim/scripts/ton /usr/local/bin/ton
+```
+
 ## Usage
 
 ### CLI
