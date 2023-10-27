@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+shopt -s globstar
 OIFS=$IFS
 
 # Check pipe from stdin or parameter
