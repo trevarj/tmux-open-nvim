@@ -14,7 +14,8 @@ fi
 FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
 
 # Parse line:col
-IFS=':' a=($FPATH); IFS=$OIFS
+IFS=':' a=("$FPATH")
+IFS=$OIFS
 [ "${a[0]}" ] || { echo "You must supply a filename. Found ${a[0]}" && exit 1; }
 FILE=$(realpath "${a[0]}")
 [ "$FILE" ] || { echo "Couldn't open file ${a[0]}" && exit 1; }
@@ -22,31 +23,32 @@ LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
 # Get all nvim listening sockets (default location)
-IFS=':' read -r -a LISTEN_SOCKS <<< $(ls ${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}/**/nvim.*.0 2>/dev/null | tr '\n' ':'); IFS=$OIFS
+IFS=':' read -r -a LISTEN_SOCKS <<<"$(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null | tr '\n' ':')"
+IFS=$OIFS
 
 # Match child process with nvim sock, since process is within
 # e.g `/run/user/1000/nvim.1624238.0` -- nvim process is 1624238
-IFS=':' read -r -a panes <<< $(tmux list-panes -F '#{pane_index} #{pane_pid}' | tr '\n' ':'); IFS=$OIFS
+IFS=':' read -r -a panes <<<"$(tmux list-panes -F '#{pane_index} #{pane_pid}' | tr '\n' ':')"
+IFS=$OIFS
 
 for pane in "${panes[@]}"; do
-  IFS=' ' pane_ids=($pane); IFS=$OIFS
+	IFS=' ' pane_ids=($pane)
+	IFS=$OIFS
 
 	id=${pane_ids[0]}
 	pid=${pane_ids[1]}
 
 	for sock in "${LISTEN_SOCKS[@]}"; do
 
-    # Get pid of nvim process
-    cpid=$(pgrep -P "$pid" nvim) 
-    ppid=0
-    if [ $cpid ]; then
-     # Get pid of nvim parent process
-     ppid=$(pgrep -P "$cpid" nvim) 
-    fi
+		# Get pid of nvim process
+		cpid=$(pgrep -P "$pid" nvim)
+		ppid=0
+		if [ $cpid ]; then
+			# Get pid of nvim parent process
+			ppid=$(pgrep -P "$cpid" nvim)
+		fi
 
-  if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
-    echo "FOUND $sock"
-    echo "FILE $FILE"
+		if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
 			# Open on remote!
 			nvim --server "$sock" --remote-send "<esc>:tabnew $FILE<cr>"
 			nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
