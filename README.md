@@ -36,6 +36,14 @@ be used no matter what.
 # Use any path that is on your $PATH
 $ sudo ln -s ~/.tmux/plugins/tmux-open-nvim/scripts/ton /usr/local/bin/ton
 ```
+## Configuration
+
+Available configuration options to put in your `.tmux.conf`
+
+|Config |Description   | Example
+|---    |---           |---
+|`set -g @ton-open-strategy ":e"` | Command for opening a file | `:e` or `:tabnew`
+
 
 ## Usage
 

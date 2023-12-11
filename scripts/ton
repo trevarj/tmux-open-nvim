@@ -2,6 +2,13 @@
 shopt -s globstar
 OIFS=$IFS
 
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "$CURRENT_DIR/variables.sh"
+source "$CURRENT_DIR/helpers.sh"
+
+OPEN_STRATEGY="$(get_tmux_option "$open_strategy" ":e")"
+
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
 if [ "$1" ]; then
@@ -50,7 +57,7 @@ for pane in "${panes[@]}"; do
 
 		if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
 			# Open on remote!
-			nvim --server "$sock" --remote-send "<esc>:tabnew $FILE<cr>"
+			nvim --server "$sock" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
 			nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
 			tmux selectp -t "$id"
 			exit 0
