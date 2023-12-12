@@ -2,15 +2,6 @@
 
 A tmux plugin that helps opening files in a Neovim pane
 
-## NOTE
-You may be interested in a similar workflow that I have created using [telescope-tmux.nvim](https://github.com/trevarj/telescope-tmux.nvim),
-where you can open up a Telescope picker and it will present to you all the file paths that
-can be found in every tmux pane. Then, you can select the from the list.
-
-<img src="https://github.com/trevarj/tmux-open-nvim/assets/5448324/60a76a27-0eb7-4522-b08e-3f6889435a17" width="500"/>
-
-[See here for details](https://github.com/trevarj/telescope-tmux.nvim/tree/develop?tab=readme-ov-file#pane-file-paths)
-
 ## Demo
 
 (click thumbnail)
@@ -96,3 +87,13 @@ Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
 
 - [ ] A fzf-like selector that can target exactly which neovim instance you want to open a file in
 - [ ] Fix "caveat" above (maybe?)
+
+## NOTE
+You may be interested in a similar workflow that I have created using [telescope-tmux.nvim](https://github.com/trevarj/telescope-tmux.nvim),
+where you can open up a Telescope picker and it will present to you all the file paths that
+can be found in every tmux pane. Then, you can select the from the list.
+
+<img src="https://github.com/trevarj/tmux-open-nvim/assets/5448324/60a76a27-0eb7-4522-b08e-3f6889435a17" width="500"/>
+
+[See here for details](https://github.com/trevarj/telescope-tmux.nvim/tree/develop?tab=readme-ov-file#pane-file-paths)
+
