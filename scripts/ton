@@ -45,16 +45,15 @@ for pane in "${panes[@]}"; do
 	id=${pane_ids[0]}
 	pid=${pane_ids[1]}
 
+	# Get pid of nvim process
+	cpid=$(pgrep -P "$pid" nvim)
+	ppid=0
+	if [ $cpid ]; then
+		# Get pid of nvim parent process
+		ppid=$(pgrep -P "$cpid" nvim)
+	fi
+
 	for sock in "${LISTEN_SOCKS[@]}"; do
-
-		# Get pid of nvim process
-		cpid=$(pgrep -P "$pid" nvim)
-		ppid=0
-		if [ $cpid ]; then
-			# Get pid of nvim parent process
-			ppid=$(pgrep -P "$cpid" nvim)
-		fi
-
 		if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
 			# Open on remote!
 			nvim --server "$sock" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
