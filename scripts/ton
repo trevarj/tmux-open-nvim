@@ -12,11 +12,11 @@ OPEN_STRATEGY="$(get_tmux_option "$open_strategy" ":e")"
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
 if [ "$1" ]; then
-	FPATH=$1
+  FPATH=$1
 elif read -r -t 2 STDIN; then
-	FPATH=$STDIN
+  FPATH=$STDIN
 else
-	echo "No file provided for opening" && exit 1
+  echo "No file provided for opening" && exit 1
 fi
 FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
 
@@ -39,29 +39,29 @@ IFS=':' read -r -a panes <<<"$(tmux list-panes -F '#{pane_index} #{pane_pid}' | 
 IFS=$OIFS
 
 for pane in "${panes[@]}"; do
-	IFS=' ' pane_ids=($pane)
-	IFS=$OIFS
+  IFS=' ' pane_ids=($pane)
+  IFS=$OIFS
 
-	id=${pane_ids[0]}
-	pid=${pane_ids[1]}
+  id=${pane_ids[0]}
+  pid=${pane_ids[1]}
 
-	# Get pid of nvim process
-	cpid=$(pgrep -P "$pid" nvim)
-	ppid=0
-	if [ $cpid ]; then
-		# Get pid of nvim parent process
-		ppid=$(pgrep -P "$cpid" nvim)
-	fi
+  # Get pid of nvim process
+  cpid=$(pgrep -P "$pid" nvim)
+  ppid=0
+  if [ $cpid ]; then
+    # Get pid of nvim parent process
+    ppid=$(pgrep -P "$cpid" nvim)
+  fi
 
-	for sock in "${LISTEN_SOCKS[@]}"; do
-		if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
-			# Open on remote!
-			nvim --server "$sock" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
-			nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
-			tmux selectp -t "$id"
-			exit 0
-		fi
-	done
+  for sock in "${LISTEN_SOCKS[@]}"; do
+    if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
+      # Open on remote!
+      nvim --server "$sock" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
+      nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
+      tmux selectp -t "$id"
+      exit 0
+    fi
+  done
 done
 
 # No remote nvim, so just open in current pane
