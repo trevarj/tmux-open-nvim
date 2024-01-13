@@ -35,34 +35,54 @@ IFS=$OIFS
 
 # Match child process with nvim sock, since process is within
 # e.g `/run/user/1000/nvim.1624238.0` -- nvim process is 1624238
-IFS=':' read -r -a panes <<<"$(tmux list-panes -F '#{pane_index} #{pane_pid}' | tr '\n' ':')"
+IFS=':' read -r -a panes <<<"$(tmux list-panes -a -F '#{window_index} #{pane_index} #{pane_pid}' | tr '\n' ':')"
 IFS=$OIFS
+
+CURRENT_WINDOW_ID=$(tmux display-message -p '#{window_index}')
+
+# args:
+#   socket
+#   win_id
+#   pane_id
+remote_open() {
+  nvim --server "$1" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
+  nvim --server "$1" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
+  tmux selectw -t "$2" && tmux selectp -t "$3"
+  exit 0
+}
 
 for pane in "${panes[@]}"; do
   IFS=' ' pane_ids=($pane)
   IFS=$OIFS
 
-  id=${pane_ids[0]}
-  pid=${pane_ids[1]}
+  win_id=${pane_ids[0]}
+  pane_id=${pane_ids[1]}
+  pid=${pane_ids[2]}
 
   # Get pid of nvim process
   cpid=$(pgrep -P "$pid" nvim)
   ppid=0
   if [ $cpid ]; then
-    # Get pid of nvim parent process
+    # Get pid of nvim parent RPC process (--embed)
     ppid=$(pgrep -P "$cpid" nvim)
   fi
 
   for sock in "${LISTEN_SOCKS[@]}"; do
-    if [[ $sock == *$cpid* ]] || [[ $sock == *$ppid* ]]; then
-      # Open on remote!
-      nvim --server "$sock" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
-      nvim --server "$sock" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
-      tmux selectp -t "$id"
-      exit 0
+    # Check if the nvim process associated with the socket is the parent id
+    # Prioritize instances running in the current window, but fallback to first found instance
+    if [[ $sock == *nvim.$ppid.* ]] && [[ $win_id == $CURRENT_WINDOW_ID ]]; then
+      remote_open $sock $win_id $pane_id
+    elif [[ $sock == *nvim.$ppid.* ]] && [[ ! $SOCK ]]; then
+      SOCK=$sock
+      WIN_ID=$win_id
+      PANE_ID=$pane_id
     fi
   done
 done
+
+if [[ $SOCK ]]; then
+  remote_open $SOCK $WIN_ID $PANE_ID
+fi
 
 # No remote nvim, so just open in current pane
 tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
