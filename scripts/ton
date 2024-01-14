@@ -8,6 +8,8 @@ source "$CURRENT_DIR/variables.sh"
 source "$CURRENT_DIR/helpers.sh"
 
 OPEN_STRATEGY="$(get_tmux_option "$open_strategy" ":e")"
+MENU_STYLE="$(get_tmux_option "$menu_style")"
+MENU_SELECTED_STYLE="$(get_tmux_option "$menu_selected_style")"
 
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
@@ -30,60 +32,49 @@ LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
 # Get all nvim listening sockets (default location)
-IFS=':' read -r -a LISTEN_SOCKS <<<"$(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null | tr '\n' ':')"
-IFS=$OIFS
+readarray -t LISTEN_SOCKS < <(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null)
 
-# Match child process with nvim sock, since process is within
-# e.g `/run/user/1000/nvim.1624238.0` -- nvim process is 1624238
-IFS=':' read -r -a panes <<<"$(tmux list-panes -a -F '#{window_index} #{pane_index} #{pane_pid}' | tr '\n' ':')"
-IFS=$OIFS
+CURRENT_WINDOW_INDEX=$(tmux display-message -p '#{window_index}')
 
-CURRENT_WINDOW_ID=$(tmux display-message -p '#{window_index}')
+MENU_ARGS=()
+SOCK_COUNT=${#LISTEN_SOCKS[@]}
+SOCK_INDEX=1
+for sock in "${LISTEN_SOCKS[@]}"; do
+  # extract pid from socket path
+  server_pid=$(echo "$sock" | cut -d'.' -f2)
+  # process id of server's parent, which is the nvim client
+  client_pid=$(ps -o ppid= -p "$server_pid" | tr -d ' ')
+  # process id of tmux pane that contains the nvim client
+  pane_pid=$(ps -o ppid= -p "$client_pid" | tr -d ' ')
 
-# args:
-#   socket
-#   win_id
-#   pane_id
-remote_open() {
-  nvim --server "$1" --remote-send "<esc>$OPEN_STRATEGY $FILE<cr>"
-  nvim --server "$1" --remote-send "<esc>:call cursor($LINE, $COLUMN)<cr>"
-  tmux selectw -t "$2" && tmux selectp -t "$3"
-  exit 0
-}
+  # tmux ids for the nvim client pane
+  readarray -d ' ' -t ids < <(tmux list-panes -a -f "#{==:#{pane_pid},$pane_pid}" -F "#{window_index} #{window_name} #{pane_index}")
+  window_index=${ids[0]}
+  window_name=${ids[1]}
+  pane_index=${ids[2]}
 
-for pane in "${panes[@]}"; do
-  IFS=' ' pane_ids=($pane)
-  IFS=$OIFS
-
-  win_id=${pane_ids[0]}
-  pane_id=${pane_ids[1]}
-  pid=${pane_ids[2]}
-
-  # Get pid of nvim process
-  cpid=$(pgrep -P "$pid" nvim)
-  ppid=0
-  if [ $cpid ]; then
-    # Get pid of nvim parent RPC process (--embed)
-    ppid=$(pgrep -P "$cpid" nvim)
+  c1="nvim --server $sock --remote-send \"<esc>$OPEN_STRATEGY $FILE<cr>\""
+  c2="nvim --server $sock --remote-send \"<esc>:call cursor($LINE, $COLUMN)<cr>\""
+  c3="tmux selectw -t $window_index && tmux selectp -t $pane_index"
+  remote_open="$c1 && $c2 && $c3"
+  if [[ $window_index == "$CURRENT_WINDOW_INDEX" ]] && [[ $SOCK_COUNT == 1 ]]; then
+    # we found a nvim running in our window, escape hatch
+    eval $remote_open
+    exit 0
+  else
+    # store this nvim instance for selection
+    MENU_ARGS+=("$window_name: pane $pane_index" "$SOCK_INDEX" "run '$remote_open'")
   fi
-
-  for sock in "${LISTEN_SOCKS[@]}"; do
-    # Check if the nvim process associated with the socket is the parent id
-    # Prioritize instances running in the current window, but fallback to first found instance
-    if [[ $sock == *nvim.$ppid.* ]] && [[ $win_id == $CURRENT_WINDOW_ID ]]; then
-      remote_open $sock $win_id $pane_id
-    elif [[ $sock == *nvim.$ppid.* ]] && [[ ! $SOCK ]]; then
-      SOCK=$sock
-      WIN_ID=$win_id
-      PANE_ID=$pane_id
-    fi
-  done
+  SOCK_INDEX=$(($SOCK_INDEX + 1))
 done
 
-if [[ $SOCK ]]; then
-  remote_open $SOCK $WIN_ID $PANE_ID
+if [[ ${MENU_ARGS[0]} ]]; then
+  # open menu for selection
+  tmux menu -s "$MENU_STYLE" -H "$MENU_SELECTED_STYLE" -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
+  exit 0
+else
+  # No remote nvim, so just open in current pane
+  tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
+  tmux send-keys "C-m"
+  exit 0
 fi
-
-# No remote nvim, so just open in current pane
-tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
-tmux send-keys "C-m"

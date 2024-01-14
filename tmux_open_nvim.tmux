@@ -17,8 +17,20 @@ set_open_strategy() {
   tmux set-option -gq "$open_strategy" "$strategy"
 }
 
+set_menu_style() {
+  local style=$(get_tmux_option "$menu_style")
+  tmux set-option -gq "$open_strategy" "$style"
+}
+
+set_menu_selected_style() {
+  local style=$(get_tmux_option "$menu_selected_style")
+  tmux set-option -gq "$menu_selected_style" "$style"
+}
+
 main() {
   set_open_strategy
+  set_menu_style
+  set_menu_selected_style
   path_add "$SCRIPT_DIR"
 }
 main
