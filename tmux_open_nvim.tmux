@@ -27,10 +27,16 @@ set_menu_selected_style() {
   tmux set-option -gq "$menu_selected_style" "$style"
 }
 
+set_prioritize_window() {
+  local opt=$(get_tmux_option "$prioritize_window" "$prioritize_window_default")
+  tmux set-option -gq "$prioritize_window" "$opt"
+}
+
 main() {
   set_open_strategy
   set_menu_style
   set_menu_selected_style
+  set_prioritize_window
   path_add "$SCRIPT_DIR"
 }
 main

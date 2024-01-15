@@ -5,3 +5,6 @@ open_strategy_default=":e"
 
 menu_style="@ton-menu-style"
 menu_selected_style="@ton-menu-selected-style"
+
+prioritize_window="@ton-prioritize-window"
+prioritize_window_default=true

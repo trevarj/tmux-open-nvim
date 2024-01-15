@@ -35,6 +35,7 @@ Available configuration options to put in your `.tmux.conf`
 |`set -g @ton-open-strategy ":e"` | Command for opening a file | `:e` or `:tabnew`
 |`set -g @ton-menu-style` | Set style of display-menu for picking a pane | See `man tmux` STYLES
 |`set -g @ton-menu-selected-style` | Set style of display-menu selection for picking a pane | See `man tmux` STYLES
+|`set -g @ton-prioritize-window true` | If true and nvim exists in current window, opens directly in that instance. If false, prompts for a selection | `true` or `false`
 
 ## Usage
 
@@ -51,9 +52,10 @@ $ ton file.txt # optionally add :[line]:[col] to the end, i.e file.txt:40:5
 # Opens file.txt in nvim pane
 ```
 
-If you have more than one Neovim instance running in a tmux window, you will be
-prompted with a tmux display-menu that will allow you to select where to open
-the file.
+If you have more than one Neovim instance running in a tmux window, or
+`@ton-prioritize-window` is `false` and you have nvims in other windows, you
+will be prompted with a tmux display-menu that will allow you to select where to
+open the file.
 
 #### Caveat
 
