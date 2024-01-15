@@ -91,7 +91,7 @@ Now you can enter fingers mode and use `Ctrl+[key]` to launch a file in `nvim`
 
 ## Future Features
 
-- [ ] A fzf-like selector that can target exactly which neovim instance you want to open a file in
+- [x] A fzf-like selector that can target exactly which neovim instance you want to open a file in ([commit](https://github.com/trevarj/tmux-open-nvim/commit/3e511319706d357c523889b6620eb87c9f8abe65))
 - [ ] Fix "caveat" above (maybe?)
 
 ## NOTE
