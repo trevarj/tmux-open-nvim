@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 shopt -s globstar
-OIFS=$IFS
 
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -24,8 +23,7 @@ fi
 FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
 
 # Parse line:col
-IFS=':' a=("$FPATH")
-IFS=$OIFS
+readarray -td: a < <(printf %s "$FPATH")
 [ "${a[0]}" ] || { echo "You must supply a filename. Found ${a[0]}" && exit 1; }
 FILE=$(realpath "${a[0]}")
 [ "$FILE" ] || { echo "Couldn't open file ${a[0]}" && exit 1; }
