@@ -34,6 +34,7 @@ COLUMN=${a[2]:-0}
 readarray -t LISTEN_SOCKS < <(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null)
 
 CURRENT_WINDOW_INDEX=$(tmux display-message -p '#{window_index}')
+CURRENT_SESSION_ID=$(tmux display-message -p '#{session_id}')
 
 MENU_ARGS=()
 SOCK_COUNT=${#LISTEN_SOCKS[@]}
@@ -47,10 +48,15 @@ for sock in "${LISTEN_SOCKS[@]}"; do
   pane_pid=$(ps -o ppid= -p "$client_pid" | tr -d ' ')
 
   # tmux ids for the nvim client pane
-  readarray -d ' ' -t ids < <(tmux list-panes -a -f "#{==:#{pane_pid},$pane_pid}" -F "#{window_index} #{window_name} #{pane_index}")
+  readarray -d ' ' -t ids < <(tmux list-panes -a -f "#{==:#{pane_pid},$pane_pid}" -F "#{window_index} #{window_name} #{pane_index} #{session_id}")
   window_index=${ids[0]}
   window_name=${ids[1]}
   pane_index=${ids[2]}
+  session_id=${ids[3]}
+
+  if [ $CURRENT_SESSION_ID != $session_id ]; then
+    continue
+  fi
 
   c1="nvim --server $sock --remote-send \"<esc>$OPEN_STRATEGY $FILE<cr>\""
   c2="nvim --server $sock --remote-send \"<esc>:call cursor($LINE, $COLUMN)<cr>\""
