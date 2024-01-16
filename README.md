@@ -4,9 +4,9 @@ A tmux plugin that helps opening files in a Neovim pane
 
 ## Demo
 
-(click thumbnail)
+<a href="https://asciinema.org/a/549092" target="_blank"><img src="https://asciinema.org/a/631558.svg" width="500"/></a>
 
-<a href="https://asciinema.org/a/549092" target="_blank"><img src="https://asciinema.org/a/549092.svg" width="500"/></a>
+[old demo](https://asciinema.org/a/549092.svg)
 ## Installation
 
 Using TPM, add this to your `.tmux.conf`
