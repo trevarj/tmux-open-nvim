@@ -11,6 +11,13 @@ MENU_STYLE="$(get_tmux_option "$menu_style")"
 MENU_SELECTED_STYLE="$(get_tmux_option "$menu_selected_style")"
 PRIORITIZE_WINDOW="$(get_tmux_option "$prioritize_window")"
 
+if [ -n "$MENU_STYLE" ]; then
+  tmux_menu_s="-s $MENU_STYLE"
+fi
+if [ -n "$MENU_SELECTED_STYLE" ]; then
+  tmux_menu_H="-H $MENU_SELECTED_STYLE"
+fi
+
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
 if [ "$1" ]; then
@@ -20,7 +27,7 @@ elif read -r -t 2 STDIN; then
 else
   echo "No file provided for opening" && exit 1
 fi
-FPATH=$(printf '%s' "$FPATH" | tr -d '[:space:]')
+FPATH=$(echo "$FPATH" | awk '{$1=$1};1') # trimming whitespace
 
 # Parse line:col
 readarray -td: a < <(printf %s "$FPATH")
@@ -41,7 +48,7 @@ SOCK_COUNT=${#LISTEN_SOCKS[@]}
 SOCK_INDEX=1
 for sock in "${LISTEN_SOCKS[@]}"; do
   # extract pid from socket path
-  server_pid=$(echo "$sock" | cut -d'.' -f2)
+  server_pid=$(echo "$sock" | awk -F'.' '{print $(NF-1)}')
   # process id of server's parent, which is the nvim client
   client_pid=$(ps -o ppid= -p "$server_pid" | tr -d ' ')
   # process id of tmux pane that contains the nvim client
@@ -54,6 +61,7 @@ for sock in "${LISTEN_SOCKS[@]}"; do
   pane_index=${ids[2]}
   session_id=${ids[3]}
 
+  # shellcheck disable=SC2086
   if [ $CURRENT_SESSION_ID != $session_id ]; then
     continue
   fi
@@ -75,7 +83,9 @@ done
 
 if [[ ${MENU_ARGS[0]} ]]; then
   # open menu for selection
-  tmux menu -s "$MENU_STYLE" -H "$MENU_SELECTED_STYLE" -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
+  echo "$tmux_menu_s $tmux_menu_H"
+  # shellcheck disable=SC2086
+  tmux menu $tmux_menu_s $tmux_menu_H -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
 else
   # No remote nvim, so just open in current pane
   tmux send-keys "nvim -c \"call cursor($LINE, $COLUMN)\" $FILE"
