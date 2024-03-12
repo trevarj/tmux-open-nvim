@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPT_DIR="$CURRENT_DIR/scripts"
-
-source "$CURRENT_DIR/scripts/helpers.sh"
-
-path_add() {
-  if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
-    NEW_PATH="${PATH:+"$PATH:"}$1"
-    tmux set-environment -g PATH "$NEW_PATH"
+get_tmux_option() {
+  local option="$1"
+  local default_value="$2"
+  local option_value=$(tmux show-option -gqv "$option")
+  if [ -z "$option_value" ]; then
+    echo "$default_value"
+  else
+    echo "$option_value"
   fi
 }
 
@@ -37,6 +36,5 @@ main() {
   set_menu_style
   set_menu_selected_style
   set_prioritize_window
-  path_add "$SCRIPT_DIR"
 }
 main

@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 shopt -s globstar
 
-CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-source "$CURRENT_DIR/variables.sh"
-source "$CURRENT_DIR/helpers.sh"
+get_tmux_option() {
+  local option="$1"
+  local default_value="$2"
+  local option_value=$(tmux show-option -gqv "$option")
+  if [ -z "$option_value" ]; then
+    echo "$default_value"
+  else
+    echo "$option_value"
+  fi
+}
 
 OPEN_STRATEGY="$(get_tmux_option "$open_strategy" ":e")"
 MENU_STYLE="$(get_tmux_option "$menu_style")"
@@ -38,10 +44,11 @@ LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
 # Get all nvim listening sockets (default location)
+# TODO: don't use `ls` here. Maybe `find` instead
 readarray -t LISTEN_SOCKS < <(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null)
 
 CURRENT_WINDOW_INDEX=$(tmux display-message -p '#{window_index}')
-CURRENT_SESSION_ID=$(tmux display-message -p '#{session_id}')
+CURRENT_SESSION_NAME=$(tmux display-message -p '#{session_name}')
 
 MENU_ARGS=()
 SOCK_COUNT=${#LISTEN_SOCKS[@]}
@@ -49,22 +56,24 @@ SOCK_INDEX=1
 for sock in "${LISTEN_SOCKS[@]}"; do
   # extract pid from socket path
   server_pid=$(echo "$sock" | awk -F'.' '{print $(NF-1)}')
+  [ -n "$server_pid" ] || continue
+
   # process id of server's parent, which is the nvim client
   client_pid=$(ps -o ppid= -p "$server_pid" | tr -d ' ')
+  [ -n "$client_pid" ] || continue
+
   # process id of tmux pane that contains the nvim client
   pane_pid=$(ps -o ppid= -p "$client_pid" | tr -d ' ')
+  [ -n "$pane_pid" ] || continue
 
   # tmux ids for the nvim client pane
-  readarray -d ' ' -t ids < <(tmux list-panes -a -f "#{==:#{pane_pid},$pane_pid}" -F "#{window_index} #{window_name} #{pane_index} #{session_id}")
+  readarray -d ' ' -t ids < <(tmux list-panes -a -f "#{==:#{pane_pid},$pane_pid}" -F "#{window_index} #{window_name} #{pane_index} #{session_name}")
   window_index=${ids[0]}
   window_name=${ids[1]}
   pane_index=${ids[2]}
-  session_id=${ids[3]}
+  session_name=${ids[3]}
 
-  # shellcheck disable=SC2086
-  if [ $CURRENT_SESSION_ID != $session_id ]; then
-    continue
-  fi
+  [ "$CURRENT_SESSION_NAME" != "$session_name" ] || continue
 
   c1="nvim --server $sock --remote-send \"<esc>$OPEN_STRATEGY $FILE<cr>\""
   c2="nvim --server $sock --remote-send \"<esc>:call cursor($LINE, $COLUMN)<cr>\""
