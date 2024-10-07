@@ -4,7 +4,7 @@ shopt -s globstar
 get_tmux_option() {
   local option="$1"
   local default_value="$2"
-  local option_value=$(tmux show-option -gqv "$option")
+  local option_value=$(tmux show-option -gqv "@$option")
   if [ -z "$option_value" ]; then
     echo "$default_value"
   else
@@ -12,10 +12,10 @@ get_tmux_option() {
   fi
 }
 
-OPEN_STRATEGY="$(get_tmux_option "$open_strategy" ":e")"
-MENU_STYLE="$(get_tmux_option "$menu_style")"
-MENU_SELECTED_STYLE="$(get_tmux_option "$menu_selected_style")"
-PRIORITIZE_WINDOW="$(get_tmux_option "$prioritize_window")"
+OPEN_STRATEGY="$(get_tmux_option "open-strategy" ":e")"
+MENU_STYLE="$(get_tmux_option "menu-style" "")"
+MENU_SELECTED_STYLE="$(get_tmux_option "menu-selected-style")"
+PRIORITIZE_WINDOW="$(get_tmux_option "ton-prioritize-window")"
 
 if [ -n "$MENU_STYLE" ]; then
   tmux_menu_s="-s $MENU_STYLE"
@@ -44,13 +44,14 @@ LINE=${a[1]:-0}
 COLUMN=${a[2]:-0}
 
 # Get all nvim listening sockets (default location)
-# TODO: don't use `ls` here. Maybe `find` instead
+# TODO: don't use $(ls) here. Maybe $(find) instead
 readarray -t LISTEN_SOCKS < <(ls "${XDG_RUNTIME_DIR:-${TMPDIR}nvim.${USER}}"/**/nvim.*.0 2>/dev/null)
 
 CURRENT_WINDOW_INDEX=$(tmux display-message -p '#{window_index}')
 CURRENT_SESSION_NAME=$(tmux display-message -p '#{session_name}')
 
 MENU_ARGS=()
+MENU_CHOICES=0
 SOCK_COUNT=${#LISTEN_SOCKS[@]}
 SOCK_INDEX=1
 for sock in "${LISTEN_SOCKS[@]}"; do
@@ -71,28 +72,34 @@ for sock in "${LISTEN_SOCKS[@]}"; do
   window_index=${ids[0]}
   window_name=${ids[1]}
   pane_index=${ids[2]}
-  session_name=${ids[3]}
+  session_name=${ids[3]//[$'\r\n']/}
 
-  [ "$CURRENT_SESSION_NAME" != "$session_name" ] || continue
+  if [[ "$CURRENT_SESSION_NAME" != "$session_name" ]]; then
+    continue
+  fi
 
   c1="nvim --server $sock --remote-send \"<esc>$OPEN_STRATEGY $FILE<cr>\""
   c2="nvim --server $sock --remote-send \"<esc>:call cursor($LINE, $COLUMN)<cr>\""
-  c3="tmux selectw -t $window_index && tmux selectp -t $pane_index"
+  c3="tmux selectw -t $session_name:$window_index && tmux selectp -t $pane_index"
   remote_open="$c1 && $c2 && $c3"
+  echo "wincount: $SESSION_WINDOW_COUNT, $PRIORITIZE_WINDOW, $window_index, $CURRENT_WINDOW_INDEX"
   if [[ $SOCK_COUNT == 1 || ($window_index == "$CURRENT_WINDOW_INDEX" && $PRIORITIZE_WINDOW == true) ]]; then
     # we found the only nvim, or found the first one in our window when prioritizing current window
     eval "$remote_open"
     exit 0
   else
     # store this nvim instance for selection
+    MENU_CHOICES=$((MENU_CHOICES + 1))
     MENU_ARGS+=("[$window_index $window_name]: pane $pane_index" "$SOCK_INDEX" "run '$remote_open'")
   fi
   SOCK_INDEX=$((SOCK_INDEX + 1))
 done
 
-if [[ ${MENU_ARGS[0]} ]]; then
+if [[ $MENU_CHOICES == 1 ]]; then
+  eval "$(echo "${MENU_ARGS[2]#'run '}" | tr -d "'")"
+elif [[ $MENU_CHOICES -gt 1 ]]; then
+  echo "${MENU_ARGS[@]}"
   # open menu for selection
-  echo "$tmux_menu_s $tmux_menu_H"
   # shellcheck disable=SC2086
   tmux menu $tmux_menu_s $tmux_menu_H -T "tmux-open-nvim: $FILE" "${MENU_ARGS[@]}"
 else
