@@ -12,9 +12,9 @@ get_tmux_option() {
   fi
 }
 
-OPEN_STRATEGY="$(get_tmux_option "open-strategy" ":e")"
-MENU_STYLE="$(get_tmux_option "menu-style" "")"
-MENU_SELECTED_STYLE="$(get_tmux_option "menu-selected-style")"
+OPEN_STRATEGY="$(get_tmux_option "ton-open-strategy" ":e")"
+MENU_STYLE="$(get_tmux_option "ton-menu-style" "")"
+MENU_SELECTED_STYLE="$(get_tmux_option "ton-menu-selected-style")"
 PRIORITIZE_WINDOW="$(get_tmux_option "ton-prioritize-window")"
 
 if [ -n "$MENU_STYLE" ]; then
