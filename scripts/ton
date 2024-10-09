@@ -82,7 +82,7 @@ for sock in "${LISTEN_SOCKS[@]}"; do
   c2="nvim --server $sock --remote-send \"<esc>:call cursor($LINE, $COLUMN)<cr>\""
   c3="tmux selectw -t $session_name:$window_index && tmux selectp -t $pane_index"
   remote_open="$c1 && $c2 && $c3"
-  echo "wincount: $SESSION_WINDOW_COUNT, $PRIORITIZE_WINDOW, $window_index, $CURRENT_WINDOW_INDEX"
+
   if [[ $SOCK_COUNT == 1 || ($window_index == "$CURRENT_WINDOW_INDEX" && $PRIORITIZE_WINDOW == true) ]]; then
     # we found the only nvim, or found the first one in our window when prioritizing current window
     eval "$remote_open"
