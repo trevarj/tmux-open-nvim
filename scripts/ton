@@ -24,6 +24,11 @@ if [ -n "$MENU_SELECTED_STYLE" ]; then
   tmux_menu_H="-H $MENU_SELECTED_STYLE"
 fi
 
+# Check if the first argument is the end-of-options marker
+if [ "$1" = "--" ]; then
+    shift # Remove the '--' argument from the list
+fi
+
 # Check pipe from stdin or parameter
 FPATH=${STDIN:-$1}
 if [ "$1" ]; then
